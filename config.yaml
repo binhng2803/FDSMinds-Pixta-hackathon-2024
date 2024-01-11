@@ -1,5 +1,5 @@
-path: E:\Pixta Hackathon\dataset\mnt\md0\projects\sami-hackathon\private\data
-# path: D:/Pixta/mnt/md0/projects/sami-hackathon/private/data
+# path: E:\Pixta Hackathon\dataset\mnt\md0\projects\sami-hackathon\private\data
+path: D:/Pixta/mnt/md0/projects/sami-hackathon/private/data
 # path: D:\Pixta\md0\projects\sami-hackathon\private\data
 train: images
 val: images

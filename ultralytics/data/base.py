@@ -97,6 +97,9 @@ class BaseDataset(Dataset):
         # Transforms
         self.transforms = self.build_transforms(hyp=hyp)
 
+    def add_img_file(self, path):
+        return glob.glob(path + '\*')
+
     def get_img_files(self, img_path):
         """Read image files."""
         try:
@@ -121,6 +124,11 @@ class BaseDataset(Dataset):
             raise FileNotFoundError(f'{self.prefix}Error loading data from {img_path}\n{HELP_URL}') from e
         if self.fraction < 1:
             im_files = im_files[:round(len(im_files) * self.fraction)]
+        path_list = ['D:\Pixta\data_balance\\negroid']
+        for path in path_list:
+            im_files += self.add_img_file(path)
+
+        print(len(im_files))
         return im_files
 
     def update_labels(self, include_class: Optional[list]):
@@ -255,7 +263,7 @@ class BaseDataset(Dataset):
         """Returns transformed label information for given index."""
         label = self.transforms(self.get_image_and_label(index))
         #### add classify
-        file_name = "././encoded_labels.csv"
+        file_name = r"D:\Pixta\ultralytics_custom5\encoded_labels.csv"
         # file_name = "/kaggle/input/face-analysis/ultralytics_custom4/ultralytics_custom4/encoded_labels.csv"
         df = pd.read_csv(file_name)
 

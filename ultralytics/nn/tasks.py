@@ -86,7 +86,7 @@ class BaseModel(nn.Module):
             if profile:
                 self._profile_one_layer(m, x, dt)
             x = m(x)  # run
-            if index in (list(range(22,28))):
+            if index in (list(range(31,37))):
                 cls_out[next(clas)] = x
             y.append(x if m.i in self.save else None)  # save output
             if visualize:
@@ -236,7 +236,7 @@ class BaseModel(nn.Module):
             if epoch > 0: pass
         except: epoch = 0
 
-        if epoch >= (1 - 1):
+        if epoch >= (5 - 1):
             self.run_loss_cls = True
 
         cls_loss = 0
@@ -269,8 +269,8 @@ class BaseModel(nn.Module):
             all_losses[key] = loss
         return all_losses, total_loss
 
-
-
+# git remote add origin https://github.com/FDSMinds-Pixta-hackathon-2024.git
+# https://github.com/binhng2803/FDSMinds-Pixta-hackathon-2024.git
 
     def init_criterion(self):
         """Initialize the loss criterion for the BaseModel."""
@@ -763,9 +763,9 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
         if m in (Classify, Conv, ConvTranspose, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, Focus,
                  BottleneckCSP, C1, C2, C2f, C3, C3TR, C3Ghost, nn.ConvTranspose2d, DWConvTranspose2d, C3x, RepC3):
             c1, c2 = ch[f], args[0]
-            if c2 != nc:  # if c2 not equal to number of classes (i.e. for Classify() output)
-            #     # c2 = make_divisible(min(c2, max_channels) * width, 8)
-                c2 = make_divisible(min(c2, max_channels) * width, 30)
+            # if c2 != nc:  # if c2 not equal to number of classes (i.e. for Classify() output)
+                # c2 = make_divisible(min(c2, max_channels) * width, 8)
+                # c2 = make_divisible(min(c2, max_channels) * width, 30)
 
             args = [c1, c2, *args[1:]]
             if m in (BottleneckCSP, C1, C2, C2f, C3, C3TR, C3Ghost, C3x, RepC3):
