@@ -24,7 +24,7 @@ Download model that I will send via drive and the directory, download the public
             .
             .
     |-------detect/
-|           -------yolov8n/
+            |-------yolov8n/
                     |-------lastest/
                             |-------best.pt
                             |-------last.pt
