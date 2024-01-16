@@ -22,3 +22,4 @@ draft2.jpg
 *.h5
 .ipynb_checkpoints/
 /public_test_and_submission_guidelin/
+/tool/bbox/
