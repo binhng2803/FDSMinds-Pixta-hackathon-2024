@@ -19,3 +19,6 @@ draft.ipynb
 draft.jpg
 draft2.jpg
 *.zip
+*.h5
+.ipynb_checkpoints/
+/public_test_and_submission_guidelin/
