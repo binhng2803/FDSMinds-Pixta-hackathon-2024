@@ -20,6 +20,8 @@ from keras.layers import (
         BatchNormalization
     )
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 class MyResnet(nn.Module):
     def __init__(self, n_classes=2):
         super().__init__()
@@ -134,6 +136,7 @@ def predict(models, img):
     skin_img = cv2.cvtColor(skin_img, cv2.COLOR_RGB2BGR)
     img = test_transform(img)
     img = img.unsqueeze(0)
+    img = img.to(device)
     output = []
     for i in range(6):
         try:
@@ -147,31 +150,10 @@ def predict(models, img):
     return output
     
 if __name__ == "__main__":
-    # resgen, resage, resrace, reskin, resemo, resmask = create_classify_models()
-    # gender_list = ["female", "male"]
-    # age_list = ["20-30s", "40-50s", "baby", "kid", "senior", "teenager"]
-    # race_list = ["caucasian", "mongoloid", "negroid"]
-    # skintone_list = ["dark", "light", "mid-dark", "mid-light"]
-    # masked_list = ["masked", "unmasked"]
-    # emotion_list = ["anger", "disgust", "fear", "happiness", "neutral", "sadness", "surprise"]
+    
     models = create_classify_models()
     
     img = cv2.imread('./cropped_face/race/valid/mongoloid/px548.jpg')
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     output = predict(models, img)
-    # img = test_transform(img)
-    # img = img.unsqueeze(0)
-    
-    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    # print(model)
-    # random_batch = torch.randn(8, 3, 224, 224)
-    # print(random_batch.shape)
-    # output = []
-    # output.append(resgen(img))
-    # output.append(resage(random_batch).shape)
-    # output.append(resrace(random_batch).shape)
-    # output.append(reskin(random_batch).shape)
-    # output.append(resemo(random_batch).shape)
-    # output.append(resmask(random_batch).shape)
     print(output)
