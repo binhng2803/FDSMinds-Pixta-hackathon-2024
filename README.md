@@ -16,6 +16,6 @@ Cons:
 
 Notes:
 - Training with origin train data (15k image): Score on public test is about 19
-- Training with duplicate male data, more black data (15k image): Score on public test is about 21
+- Training with duplicate male data, more black data: Score on public test is about 21
 
 -> This approach shows the promising
