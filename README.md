@@ -7,7 +7,7 @@ To do that, we must:
 - add loss function for classify, modify loss computing
 
 Pros:
-- high real-time: about 15fps to get output if using GPU
+- high real-time: about 75fps to get output if using GPU
 - easy for training: because it trains both detection task and classify task at the same time
 
 Cons:
