@@ -1,0 +1,9 @@
+path: D:/Pixta/mnt/md0/projects/sami-hackathon/private/data
+# path: D:\Pixta\ultralytics_custom5\private_test\
+# path: D:\Pixta\data_duplicate\data
+train: images
+val: D:/Pixta/md0/projects/sami-hackathon/private/data/images
+
+nc: 1
+names:
+  0: face
