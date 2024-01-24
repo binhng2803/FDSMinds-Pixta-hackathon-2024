@@ -23,3 +23,5 @@ draft2.jpg
 .ipynb_checkpoints/
 /public_test_and_submission_guidelin/
 /tool/bbox/
+.cph
+label_checking_tool.py
