@@ -171,12 +171,12 @@ class v8DetectionLoss:
     def preprocess(self, targets, batch_size, scale_tensor):
         """Preprocesses the target counts and matches with the input batch size to output a tensor."""
         if targets.shape[0] == 0:
-            out = torch.zeros(batch_size, 0, 5, device=self.device)
+            out = torch.zeros(batch_size, 0, 29, device=self.device)
         else:
             i = targets[:, 0]  # image index
             _, counts = i.unique(return_counts=True)
             counts = counts.to(dtype=torch.int32)
-            out = torch.zeros(batch_size, counts.max(), 5, device=self.device)
+            out = torch.zeros(batch_size, counts.max(), 29, device=self.device)
             for j in range(batch_size):
                 matches = i == j
                 n = matches.sum()
@@ -188,7 +188,7 @@ class v8DetectionLoss:
     def bbox_decode(self, anchor_points, pred_dist):
         """Decode predicted object bounding box coordinates from anchor points and distribution."""
         if self.use_dfl:
-            b, a, c = pred_dist.shape  # batch, anchors, channels
+            b, a, c = pred_dist.shape  # batch, anchors, channels 
             pred_dist = pred_dist.view(b, a, 4, c // 4).softmax(3).matmul(self.proj.type(pred_dist.dtype))
             # pred_dist = pred_dist.view(b, a, c // 4, 4).transpose(2,3).softmax(3).matmul(self.proj.type(pred_dist.dtype))
             # pred_dist = (pred_dist.view(b, a, c // 4, 4).softmax(2) * self.proj.type(pred_dist.dtype).view(1, 1, -1, 1)).sum(2)
@@ -196,9 +196,9 @@ class v8DetectionLoss:
 
     def __call__(self, preds, batch):
         """Calculate the sum of the loss for box, cls and dfl multiplied by batch size."""
-        loss = torch.zeros(3, device=self.device)  # box, cls, dfl
+        loss = torch.zeros(4, device=self.device)  # box, cls, dfl, other tasks
         
-        # original
+        # original #pred b, a, 29 
         # feats = preds[1] if isinstance(preds, tuple) else preds
         # pred_distri, pred_scores = torch.cat([xi.view(feats[0].shape[0], self.no, -1) for xi in feats], 2).split(
         #     (self.reg_max * 4, self.nc), 1
@@ -210,7 +210,7 @@ class v8DetectionLoss:
         else:
             feats = preds
 
-        pred_distri, pred_scores = feats.split((self.reg_max * 4, self.nc), 1)
+        pred_distri, pred_scores, pred_others = feats.split((self.reg_max * 4, 1, 24), 1)
         #end of modification
         pred_scores = pred_scores.permute(0, 2, 1).contiguous()
         pred_distri = pred_distri.permute(0, 2, 1).contiguous()
@@ -221,12 +221,12 @@ class v8DetectionLoss:
         anchor_points, stride_tensor = make_anchors(feats, self.stride, 0.5)
 
         # Targets
-        # targets = torch.cat((batch["batch_idx"].view(-1, 1), batch["cls"].view(-1, 1), batch["bboxes"]), 1)
+        targets = torch.cat((batch["batch_idx"].view(-1, 1), batch["cls"].view(-1, 1), batch["bboxes"]), 1)
         ################
-        targets = torch.cat((batch["batch_idx"].view(-1, 1), batch["bboxes"]), 1)
+        # targets = torch.cat((batch["batch_idx"].view(-1, 1), batch["bboxes"]), 1)
 
         # Append one-hot encoded class labels for each task to targets
-        for task, num_classes in [('c3', 1), ('c4', 2), ('c5', 2), ('c6', 3), ('c7', 6), ('c8', 4), ('c9', 7)]:
+        for task, num_classes in [('c4', 2), ('c5', 2), ('c6', 3), ('c7', 6), ('c8', 4), ('c9', 7)]:
             # One-hot encode the class labels
             one_hot_labels = torch.zeros((batch[task].shape[0], num_classes), device=self.device)
             one_hot_labels.scatter_(1, batch[task].view(-1, 1), 1)
@@ -234,7 +234,9 @@ class v8DetectionLoss:
         ###############
         targets = self.preprocess(targets.to(self.device), batch_size, scale_tensor=imgsz[[1, 0, 1, 0]])
         # gt_labels, gt_bboxes = targets.split((1, 4), 2)  # cls, xyxy
-        gt_bboxes, *gt_labels = targets.split((4, 1, 2, 2, 3, 6, 4, 7), 2)  # xyxy, cls for each task
+        gt_labels, gt_bboxes, *other_labels = targets.split((1, 4, 2, 2, 3, 6, 4, 7), 2)  # xyxy, cls for each task
+        
+        # gt_labels, gt_bboxes, * dfksdkdf
         mask_gt = gt_bboxes.sum(2, keepdim=True).gt_(0)
 
         # Pboxes
@@ -244,7 +246,7 @@ class v8DetectionLoss:
             pred_scores.detach().sigmoid(),
             (pred_bboxes.detach() * stride_tensor).type(gt_bboxes.dtype),
             anchor_points * stride_tensor,
-            gt_labels,
+            gt_labels, 
             gt_bboxes,
             mask_gt,
         )
@@ -253,18 +255,18 @@ class v8DetectionLoss:
 
         # Cls loss
         # loss[1] = self.varifocal_loss(pred_scores, target_scores, target_labels) / target_scores_sum  # VFL way
-        # loss[1] = self.bce(pred_scores, target_scores.to(dtype)).sum() / target_scores_sum  # BCE
+        loss[1] = self.bce(pred_scores, target_scores.to(dtype)).sum() / target_scores_sum  # BCE
         #modification for multi-task   
         # Calculate multi-class classification loss for each task
          # Number of classes for each task
         start = 0
-        for i, (task, n_classes) in enumerate(zip(['cv3', 'cv4', 'cv5', 'cv6', 'cv7', 'cv8', 'cv9'], self.num_classes)):
+        for i, (task, n_classes) in enumerate(zip(['cv4', 'cv5', 'cv6', 'cv7', 'cv8', 'cv9'], self.num_classes)):
             end = start + n_classes
             pred_scores_task = pred_scores[:, :, start : end] 
             start = end
             class_targets = gt_labels[i]
             class_loss = self.class_losses[task](pred_scores_task, class_targets)
-            loss[1] += class_loss
+            loss[3] += class_loss
         # loss[1] = self.class_losses['cv4'](pred_scores, target_scores.to(dtype)).sum() / target_scores_sum  # BCE
         #end of modification
 
@@ -278,7 +280,7 @@ class v8DetectionLoss:
         loss[0] *= self.hyp.box  # box gain
         loss[1] *= self.hyp.cls  # cls gain
         loss[2] *= self.hyp.dfl  # dfl gain
-
+        loss[3] *= 0.5 
         return loss.sum() * batch_size, loss.detach()  # loss(box, cls, dfl)
 
 
