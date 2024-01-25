@@ -1,12 +1,15 @@
-path: 
-train: 
-val: 
+path: /home/ankhanh/Downloads/pixta/sample_data
+train: images
+val:  /home/ankhanh/Downloads/pixta/sample_data/images
 
+nc: 1
+  names:
+    0: face 
 tasks:
-  c3: #face
-    nc: 1
-    names:
-      0: face
+  # c3: #face
+  #   nc: 1
+  #   names:
+  #     0: face
   c4: #gender
     nc: 2
     names: 

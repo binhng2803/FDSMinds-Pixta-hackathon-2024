@@ -163,9 +163,9 @@ class v8DetectionLoss:
         self.bbox_loss = BboxLoss(m.reg_max - 1, use_dfl=self.use_dfl).to(device)
         self.proj = torch.arange(m.reg_max, dtype=torch.float, device=device)
         # modification
-        self.num_classes = [1, 2, 2, 3, 6, 4, 7] 
+        self.num_classes = [2, 2, 3, 6, 4, 7] 
         self.class_losses = {}
-        for task in ['cv3', 'cv4', 'cv5', 'cv6', 'cv7', 'cv8', 'cv9']:
+        for task in ['cv4', 'cv5', 'cv6', 'cv7', 'cv8', 'cv9']:
             self.class_losses[task] = nn.CrossEntropyLoss()  # or another appropriate loss function
         # end of modification
     def preprocess(self, targets, batch_size, scale_tensor):
