@@ -162,7 +162,12 @@ class v8DetectionLoss:
         self.assigner = TaskAlignedAssigner(topk=10, num_classes=self.nc, alpha=0.5, beta=6.0)
         self.bbox_loss = BboxLoss(m.reg_max - 1, use_dfl=self.use_dfl).to(device)
         self.proj = torch.arange(m.reg_max, dtype=torch.float, device=device)
-
+        # modification
+        self.num_classes = [1, 2, 2, 3, 6, 4, 7] 
+        self.class_losses = {}
+        for task in ['cv3', 'cv4', 'cv5', 'cv6', 'cv7', 'cv8', 'cv9']:
+            self.class_losses[task] = nn.CrossEntropyLoss()  # or another appropriate loss function
+        # end of modification
     def preprocess(self, targets, batch_size, scale_tensor):
         """Preprocesses the target counts and matches with the input batch size to output a tensor."""
         if targets.shape[0] == 0:
@@ -216,9 +221,20 @@ class v8DetectionLoss:
         anchor_points, stride_tensor = make_anchors(feats, self.stride, 0.5)
 
         # Targets
-        targets = torch.cat((batch["batch_idx"].view(-1, 1), batch["cls"].view(-1, 1), batch["bboxes"]), 1)
+        # targets = torch.cat((batch["batch_idx"].view(-1, 1), batch["cls"].view(-1, 1), batch["bboxes"]), 1)
+        ################
+        targets = torch.cat((batch["batch_idx"].view(-1, 1), batch["bboxes"]), 1)
+
+        # Append one-hot encoded class labels for each task to targets
+        for task, num_classes in [('c3', 1), ('c4', 2), ('c5', 2), ('c6', 3), ('c7', 6), ('c8', 4), ('c9', 7)]:
+            # One-hot encode the class labels
+            one_hot_labels = torch.zeros((batch[task].shape[0], num_classes), device=self.device)
+            one_hot_labels.scatter_(1, batch[task].view(-1, 1), 1)
+            targets = torch.cat((targets, one_hot_labels), 1)
+        ###############
         targets = self.preprocess(targets.to(self.device), batch_size, scale_tensor=imgsz[[1, 0, 1, 0]])
-        gt_labels, gt_bboxes = targets.split((1, 4), 2)  # cls, xyxy
+        # gt_labels, gt_bboxes = targets.split((1, 4), 2)  # cls, xyxy
+        gt_bboxes, *gt_labels = targets.split((4, 1, 2, 2, 3, 6, 4, 7), 2)  # xyxy, cls for each task
         mask_gt = gt_bboxes.sum(2, keepdim=True).gt_(0)
 
         # Pboxes
@@ -237,7 +253,20 @@ class v8DetectionLoss:
 
         # Cls loss
         # loss[1] = self.varifocal_loss(pred_scores, target_scores, target_labels) / target_scores_sum  # VFL way
-        loss[1] = self.bce(pred_scores, target_scores.to(dtype)).sum() / target_scores_sum  # BCE
+        # loss[1] = self.bce(pred_scores, target_scores.to(dtype)).sum() / target_scores_sum  # BCE
+        #modification for multi-task   
+        # Calculate multi-class classification loss for each task
+         # Number of classes for each task
+        start = 0
+        for i, (task, n_classes) in enumerate(zip(['cv3', 'cv4', 'cv5', 'cv6', 'cv7', 'cv8', 'cv9'], self.num_classes)):
+            end = start + n_classes
+            pred_scores_task = pred_scores[:, :, start : end] 
+            start = end
+            class_targets = gt_labels[i]
+            class_loss = self.class_losses[task](pred_scores_task, class_targets)
+            loss[1] += class_loss
+        # loss[1] = self.class_losses['cv4'](pred_scores, target_scores.to(dtype)).sum() / target_scores_sum  # BCE
+        #end of modification
 
         # Bbox loss
         if fg_mask.sum():
