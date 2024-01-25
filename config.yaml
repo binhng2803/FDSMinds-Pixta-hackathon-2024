@@ -1,0 +1,54 @@
+path: /home/ankhanh/Downloads/pixta/sample_data
+train: images
+val:  /home/ankhanh/Downloads/pixta/sample_data/images
+
+nc: 1
+names:
+  0: face 
+# tasks:
+#   c3: #face
+#     nc: 1
+#     names:
+#       0: face
+#   c4: #gender
+#     nc: 2
+#     names: 
+#       0: Male
+#       1: Female
+#   c5: #masked
+#     nc: 2
+#     names: 
+#       0: Masked
+#       1: Unmasked
+#   c6: #race
+#     nc: 3
+#     names: 
+#       0: Caucasian
+#       1: Mongoloid
+#       2: Negroid
+#   c7: #age
+#     nc: 6
+#     names:
+#       0: 20-30s
+#       1: 40-50s
+#       2: Baby
+#       3: Kid
+#       4: Senior
+#       5: Teenager
+#   c8: #skintone
+#     nc: 4
+#     names:
+#       0: dark
+#       1: light
+#       2: mid-dark
+#       3: mid-light
+#   c9: #emotion
+#     nc: 7
+#     names:
+#       0: Anger
+#       1: Disgust
+#       2: Fear
+#       3: Happiness
+#       4: Neutral
+#       5: Sadness
+#       6: Surprise
